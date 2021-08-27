@@ -1,6 +1,7 @@
 [package]
 name = "tokio-stream-ext"
 version = "0.1.4"
+description = "Stream extension with new operators, this will grow over the time"
 authors = ["Alex Halemba <alex-halemba@gmx.de>"]
 edition = "2018"
 repository = "https://github.com/Alexander89/tokio-stream-ext"
