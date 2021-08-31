@@ -1,6 +1,6 @@
 [package]
 name = "tokio-stream-ext"
-version = "0.1.4"
+version = "0.1.5"
 description = "Stream extension with new operators, this will grow over the time"
 authors = ["Alex Halemba <alex-halemba@gmx.de>"]
 edition = "2018"
@@ -11,8 +11,15 @@ keywords = ["Stream", "Rx", "operators", "future", "tokio"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 futures = "0.3.16"
 pin-project-lite = "0.2.7"
 tokio-stream = "0.1.7"
 tokio = { version = "1.10.1" }
+
+[dev-dependencies]
+tokio = { version = "1.10.1", features = ["full"] }
+tokio-stream = "0.1.7"

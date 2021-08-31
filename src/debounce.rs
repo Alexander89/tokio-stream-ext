@@ -48,21 +48,58 @@ where
         match me.value.poll_next(cx) {
             Poll::Ready(Some(v)) => {
                 let d = (*me.debounce_time).clone();
-                me.delay.as_mut().reset(Instant::now() + d);
+                me.delay.as_mut().reset(Instant::now() + (d)); // FixMe doubleing issue
                 *me.last_state = Some(v);
             }
-            Poll::Ready(None) => return Poll::Ready((*me.last_state).clone()),
+            Poll::Ready(None) => {
+                let l = (*me.last_state).clone();
+                *me.last_state = None;
+                return Poll::Ready(l);
+            }
             _ => (),
         }
 
         // Now check the timer
         match me.delay.poll(cx) {
-            Poll::Ready(()) => return Poll::Ready((*me.last_state).clone()),
+            Poll::Ready(()) => {
+                if let Some(l) = (*me.last_state).clone() {
+                    *me.last_state = None;
+                    return Poll::Ready(Some(l));
+                } else {
+                    Poll::Pending
+                }
+            }
             Poll::Pending => Poll::Pending,
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.value.size_hint()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::StreamOpsExt;
+    use std::time::Duration;
+    use tokio::{sync::mpsc, time::sleep};
+    use tokio_stream::{wrappers::ReceiverStream, StreamExt};
+
+    #[tokio::test]
+    async fn debounce_test() {
+        let (tx, rx) = mpsc::channel(5);
+        let j = tokio::spawn(async move {
+            for i in 1..4 {
+                sleep(Duration::from_millis(100 * i)).await;
+                tx.send(i).await.unwrap();
+            }
+        });
+
+        let mut stream = Box::pin(ReceiverStream::new(rx).debounce(Duration::from_millis(250)));
+
+        assert_eq!(stream.next().await, Some(2));
+        assert_eq!(stream.next().await, Some(3));
+        assert_eq!(stream.next().await, None);
+        assert!(j.await.is_ok());
     }
 }
